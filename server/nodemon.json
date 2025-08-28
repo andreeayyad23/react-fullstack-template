@@ -1,0 +1,6 @@
+{
+  "watch": ["*.ts", "config/**/*.ts", "routes/**/*.ts", "controllers/**/*.ts", "models/**/*.ts"],
+  "ext": "ts,json",
+  "ignore": ["node_modules"],
+  "exec": "ts-node ./server.ts"
+}

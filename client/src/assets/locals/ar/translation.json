@@ -1,0 +1,33 @@
+{
+  "brand": "ماركة",
+  "logout": "تسجيل الخروج",
+  "profile": "الملف الشخصي",
+  "change_language": "تغيير اللغة",
+  "dashboard": {
+    "welcome": "مرحبًا بك في لوحة القيادة",
+    "goodMorning": "صباح الخير!",
+    "goodAfternoon": "مساء الخير!",
+    "goodEvening": "مساء الخير!"
+  },
+  "auth": {
+    "createAccount": "إنشاء حساب",
+    "registrationSuccess": "تم التسجيل بنجاح! جارٍ التحويل إلى تسجيل الدخول...",
+    "username": "اسم المستخدم",
+    "creatingAccount": "جارٍ انشاء الحساب...",
+    "signIn": "تسجيل الدخول",
+    "loginSuccess": "تم تسجيل الدخول بنجاح! جارٍ التحويل...",
+    "email": "عنوان البريد الإلكتروني",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟",
+    "password": "كلمة المرور",
+    "togglePasswordVisibility": "تبديل رؤية كلمة المرور",
+    "signingIn": "جارٍ تسجيل الدخول...",
+    "noAccount": "ليس لديك حساب؟",
+    "signUp": "اشتراك"
+  },
+  "notFound": {
+    "title": "صفحة غير موجودة",
+    "message": "عذرًا، لم نتمكن من العثور على الصفحة التي تبحث عنها.",
+    "errorCode": "خطأ 404",
+    "backToHome": "العودة إلى الصفحة الرئيسية"
+  }
+}
