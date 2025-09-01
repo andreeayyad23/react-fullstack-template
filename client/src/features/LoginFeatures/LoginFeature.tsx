@@ -17,19 +17,34 @@ import { useNavigate } from "@tanstack/react-router";
 import { useLogin } from "../../hooks/Authentication/useAuthMutation";
 import { useAuth } from "../../hooks/Authentication/useAuth";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
-// 🔽 Match backend error structure
+// ✅ Schema: only frontend validation
+const loginSchema = (t: (key: string) => string) =>
+  z.object({
+    email: z
+      .string()
+      .min(1, t("auth.errors.emailRequired"))
+      .email(t("auth.errors.invalidEmail")),
+    password: z
+      .string()
+      .min(1, t("auth.errors.passwordRequired"))
+      .min(6, t("auth.errors.passwordMin")),
+  });
+
 interface LoginError {
   message?: string;
-  errors?: {
-    email?: string;
-    password?: string;
-  };
+  errors?: Record<string, string | string[]>;
 }
 
 interface LoginData {
   email: string;
   password: string;
+}
+
+interface ExtractedBackendErrors {
+  globalErrors: string[];
+  fieldErrors: Partial<Record<keyof LoginData, string>>;
 }
 
 const LoginFeature: React.FC = () => {
@@ -38,60 +53,130 @@ const LoginFeature: React.FC = () => {
     email: "",
     password: "",
   });
-
-  const [showPassword] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [localErrors, setLocalErrors] = useState<
+    Partial<Record<keyof LoginData, string>>
+  >({});
+  const [backendFieldErrors, setBackendFieldErrors] = useState<
+    Partial<Record<keyof LoginData, string>>
+  >({});
+  const [globalBackendErrors, setGlobalBackendErrors] = useState<string[]>([]);
 
-  const { mutate: loginMutation, isPending, error, isSuccess } = useLogin();
+  const { mutate: loginMutation, isPending, isSuccess } = useLogin();
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const isRTL = i18n.language === "ar" || i18n.language === "he";
+  const schema = loginSchema(t);
 
+  // ✅ Handle input change
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    if (localErrors[name as keyof LoginData]) {
+      setLocalErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[name as keyof LoginData];
+        return updated;
+      });
+    }
+    if (backendFieldErrors[name as keyof LoginData]) {
+      setBackendFieldErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[name as keyof LoginData];
+        return updated;
+      });
+    }
   };
 
-  const handleBlur = (field: string) => {
+  const handleBlur = (field: keyof LoginData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
   };
 
+  // ✅ Collect and categorize backend errors
+  const extractBackendErrors = (err: unknown): ExtractedBackendErrors => {
+    const globalErrors: string[] = [];
+    const fieldErrors: Partial<Record<keyof LoginData, string>> = {};
+
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response
+    ) {
+      const responseData = (err.response as { data: LoginError }).data;
+
+      if (
+        responseData.message &&
+        (!responseData.errors || Object.keys(responseData.errors).length === 0)
+      ) {
+        globalErrors.push(
+          t(`errors.${responseData.message}`, responseData.message)
+        );
+      }
+
+      if (responseData.errors) {
+        Object.entries(responseData.errors).forEach(([key, val]) => {
+          const field = key as keyof LoginData;
+          if (typeof val === "string") {
+            fieldErrors[field] = t(`errors.${val}`, val);
+          } else if (Array.isArray(val) && val.length > 0) {
+            fieldErrors[field] = t(`errors.${val[0]}`, val[0]);
+          }
+        });
+      }
+
+      if (
+        globalErrors.length === 0 &&
+        Object.keys(fieldErrors).length === 0
+      ) {
+        globalErrors.push(
+          t("errors.unknown_error", "An unexpected error occurred.")
+        );
+      }
+    } else {
+      globalErrors.push(
+        t("errors.network_error", "A network error occurred.")
+      );
+    }
+    return { globalErrors, fieldErrors };
+  };
+
+  // ✅ Handle form submit
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({
-      email: true,
-      password: true,
-    });
+    setTouched({ email: true, password: true });
+
+    const result = schema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof LoginData, string>> = {};
+      result.error.errors.forEach((err) => {
+        const path = err.path[0] as keyof LoginData;
+        fieldErrors[path] = err.message;
+      });
+      setLocalErrors(fieldErrors);
+      return;
+    }
+
+    setLocalErrors({});
+    setGlobalBackendErrors([]);
+    setBackendFieldErrors({});
+
     loginMutation(formData, {
       onSuccess: (data) => {
         login(data.token);
         navigate({ to: "/" });
       },
+      onError: (err) => {
+        const { globalErrors, fieldErrors } = extractBackendErrors(err);
+        setGlobalBackendErrors(globalErrors);
+        setBackendFieldErrors(fieldErrors);
+      },
     });
-  };
-
-  const getBackendError = (field: keyof LoginData): string | undefined => {
-    let backendError: LoginError | undefined;
-    if (
-      error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
-    ) {
-      backendError = (error.response as { data: LoginError }).data;
-    }
-    return backendError?.errors?.[field];
-  };
-
-  const showError = (field: keyof LoginData): boolean => {
-    return Boolean(touched[field] && getBackendError(field));
-  };
-
-  const getErrorMessage = (field: keyof LoginData): string | undefined => {
-    return getBackendError(field);
   };
 
   return (
@@ -118,7 +203,6 @@ const LoginFeature: React.FC = () => {
           {t("auth.signIn")}
         </Typography>
 
-        {/* Success Alert */}
         {isSuccess && (
           <Alert
             severity="success"
@@ -128,8 +212,18 @@ const LoginFeature: React.FC = () => {
           </Alert>
         )}
 
+        {globalBackendErrors.length > 0 && (
+          <Alert
+            severity="error"
+            sx={{ width: "100%", mb: 2, borderRadius: 1 }}
+          >
+            {globalBackendErrors.map((msg, idx) => (
+              <div key={idx}>{msg}</div>
+            ))}
+          </Alert>
+        )}
+
         <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
-          {/* Email Field */}
           <TextField
             margin="normal"
             required
@@ -141,8 +235,14 @@ const LoginFeature: React.FC = () => {
             value={formData.email}
             onChange={handleChange}
             onBlur={() => handleBlur("email")}
-            error={showError("email")}
-            helperText={showError("email") ? getErrorMessage("email") : ""}
+            error={Boolean(
+              touched.email && (localErrors.email || backendFieldErrors.email)
+            )}
+            helperText={
+              (touched.email &&
+                (localErrors.email || backendFieldErrors.email)) ||
+              ""
+            }
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -150,24 +250,31 @@ const LoginFeature: React.FC = () => {
                 </InputAdornment>
               ),
             }}
+            FormHelperTextProps={{
+              sx: { textAlign: isRTL ? "right" : "left" },
+            }}
           />
 
-          {/* Password Field */}
           <TextField
             margin="normal"
             required
             fullWidth
             name="password"
             label={t("auth.password")}
-            type={showPassword ? "text" : "password"}
+            type="password"
             id="password"
             autoComplete="current-password"
             value={formData.password}
             onChange={handleChange}
             onBlur={() => handleBlur("password")}
-            error={showError("password")}
+            error={Boolean(
+              touched.password &&
+                (localErrors.password || backendFieldErrors.password)
+            )}
             helperText={
-              showError("password") ? getErrorMessage("password") : ""
+              (touched.password &&
+                (localErrors.password || backendFieldErrors.password)) ||
+              ""
             }
             InputProps={{
               startAdornment: (
@@ -176,9 +283,11 @@ const LoginFeature: React.FC = () => {
                 </InputAdornment>
               ),
             }}
+            FormHelperTextProps={{
+              sx: { textAlign: isRTL ? "right" : "left" },
+            }}
           />
 
-          {/* Submit Button */}
           <Button
             type="submit"
             fullWidth
@@ -203,7 +312,6 @@ const LoginFeature: React.FC = () => {
             )}
           </Button>
 
-          {/* Register Link */}
           <Box sx={{ textAlign: "center" }}>
             <Typography variant="body2" color="text.secondary">
               {t("auth.noAccount")}{" "}

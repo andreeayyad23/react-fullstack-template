@@ -28,8 +28,8 @@ const login = async (
 
   if (!email || !password) {
     return res.status(400).json({
-      message: req.t("validation_failed"),
-      errors: { email: req.t("email_password_required") },
+      message: "validation_failed",
+      errors: { email: "email_password_required" },
     });
   }
 
@@ -37,16 +37,16 @@ const login = async (
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(400).json({
-        message: req.t("validation_failed"),
-        errors: { email: req.t("invalid_credentials") },
+        message: "validation_failed",
+        errors: { email: "invalid_credentials" },
       });
     }
 
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(400).json({
-        message: req.t("validation_failed"),
-        errors: { password: req.t("invalid_credentials") },
+        message: "validation_failed",
+        errors: { password: "invalid_credentials" },
       });
     }
 
@@ -57,13 +57,13 @@ const login = async (
     );
 
     return res.status(200).json({
-      message: req.t("login_successful"),
+      message: "login_successful",
       token,
     });
   } catch (error) {
     console.error("Login error:", error);
     return res.status(500).json({
-      message: req.t("server_error"),
+      message: "server_error",
     });
   }
 };
@@ -77,24 +77,24 @@ const register = async (
   const errors: { username?: string; email?: string; password?: string } = {};
 
   if (!username || typeof username !== "string") {
-    errors.username = req.t("username_required");
+    errors.username = "username_required";
   } else if (username.trim().length < 3) {
-    errors.username = req.t("username_min");
+    errors.username = "username_min";
   }
 
   if (!email || typeof email !== "string") {
-    errors.email = req.t("email_required");
+    errors.email = "email_required";
   } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    errors.email = req.t("email_invalid");
+    errors.email = "email_invalid";
   }
 
   if (!password || typeof password !== "string" || password.length < 3) {
-    errors.password = req.t("password_min");
+    errors.password = "password_min";
   }
 
   if (Object.keys(errors).length > 0) {
     return res.status(400).json({
-      message: req.t("validation_failed"),
+      message: "validation_failed",
       errors,
     });
   }
@@ -110,14 +110,14 @@ const register = async (
     if (existingUser) {
       if (existingUser.email === trimmedEmail) {
         return res.status(400).json({
-          message: req.t("validation_failed"),
-          errors: { email: req.t("email_exists") },
+          message: "validation_failed",
+          errors: { email: "email_exists" },
         });
       }
       if (existingUser.name === trimmedUsername) {
         return res.status(400).json({
-          message: req.t("validation_failed"),
-          errors: { username: req.t("username_taken") },
+          message: "validation_failed",
+          errors: { username: "username_taken" },
         });
       }
     }
@@ -137,14 +137,14 @@ const register = async (
     );
 
     return res.status(201).json({
-      message: req.t("registration_successful"),
+      message: "registration_successful",
       user: { id: user._id, name: user.name, email: user.email },
       token,
     });
   } catch (error) {
     console.error("Registration error:", error);
     return res.status(500).json({
-      message: req.t("server_error"),
+      message: "server_error",
     });
   }
 };
@@ -156,7 +156,7 @@ const dashboard = async (
   const luckyNumber = Math.floor(Math.random() * 100);
 
   if (!req.user) {
-    return res.status(401).json({ message: req.t("unauthorized") });
+    return res.status(401).json({ message: "unauthorized" });
   }
 
   return res.status(200).json({
@@ -169,13 +169,13 @@ const getAllUsers = async (req: Request, res: Response): Promise<Response> => {
   try {
     const users = await User.find({}, "-password");
     return res.status(200).json({
-      message: req.t("users_retrieved"),
+      message: "users_retrieved",
       users,
     });
   } catch (error) {
     console.error("Get users error:", error);
     return res.status(500).json({
-      message: req.t("server_error"),
+      message: "server_error",
     });
   }
 };

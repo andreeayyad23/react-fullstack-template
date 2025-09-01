@@ -1,13 +1,11 @@
-// src/features/auth/components/RegisterForm.tsx
 import React, { useState } from "react";
 import {
-  Box,
-  Button,
-  TextField,
-  Typography,
   Container,
   Paper,
+  Typography,
   Alert,
+  TextField,
+  Button,
   CircularProgress,
   InputAdornment,
   Link,
@@ -20,16 +18,15 @@ import {
 import { useNavigate } from "@tanstack/react-router";
 import { useRegister } from "../../hooks/Authentication/useAuthMutation";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
-// 🔽 Match backend error structure
-interface RegisterError {
-  message?: string;
-  errors?: {
-    username?: string;
-    email?: string;
-    password?: string;
-  };
-}
+// ✅ Frontend schema validation
+const registerSchema = (t: (key: string) => string) =>
+  z.object({
+    username: z.string().min(3, t("errors.username_min")),
+    email: z.string().email(t("errors.email_invalid")),
+    password: z.string().min(3, t("errors.password_min")),
+  });
 
 interface RegisterData {
   username: string;
@@ -37,67 +34,127 @@ interface RegisterData {
   password: string;
 }
 
+interface RegisterError {
+  message?: string;
+  errors?: Record<string, string | string[]>;
+}
+
 const RegisterFeature: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const { mutate: registerMutation, isPending, isSuccess } = useRegister();
+
   const [formData, setFormData] = useState<RegisterData>({
     username: "",
     email: "",
     password: "",
   });
 
-  const [showPassword] = useState(false);
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [localErrors, setLocalErrors] = useState<
+    Partial<Record<keyof RegisterData, string>>
+  >({});
+  const [backendFieldErrors, setBackendFieldErrors] = useState<
+    Partial<Record<keyof RegisterData, string>>
+  >({});
+  const [globalBackendErrors, setGlobalBackendErrors] = useState<string[]>([]);
 
-  const { mutate: register, isPending, error, isSuccess } = useRegister();
-  const navigate = useNavigate();
-
-  const isRTL = i18n.language === "ar" || i18n.language === "he";
+  const isRTL = i18n.language === "ar";
+  const schema = registerSchema(t);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    setLocalErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[name as keyof RegisterData];
+      return updated;
+    });
+
+    setBackendFieldErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[name as keyof RegisterData];
+      return updated;
+    });
   };
 
-  const handleBlur = (field: string) => {
-    setTouched((prev) => ({ ...prev, [field]: true }));
+  const extractBackendErrors = (err: unknown) => {
+    const globalErrors: string[] = [];
+    const fieldErrors: Partial<Record<keyof RegisterData, string>> = {};
+
+    if (
+      err &&
+      typeof err === "object" &&
+      "response" in err &&
+      err.response &&
+      typeof err.response === "object" &&
+      "data" in err.response
+    ) {
+      const responseData = (err.response as { data: RegisterError }).data;
+
+      if (
+        responseData.message &&
+        (!responseData.errors || Object.keys(responseData.errors).length === 0)
+      ) {
+        globalErrors.push(
+          t(`errors.${responseData.message}`, responseData.message)
+        );
+      }
+
+      if (responseData.errors) {
+        Object.entries(responseData.errors).forEach(([key, val]) => {
+          const field = key as keyof RegisterData;
+          if (typeof val === "string") {
+            fieldErrors[field] = t(`errors.${val}`, val);
+          } else if (Array.isArray(val) && val.length > 0) {
+            fieldErrors[field] = t(`errors.${val[0]}`, val[0]);
+          }
+        });
+      }
+
+      if (globalErrors.length === 0 && Object.keys(fieldErrors).length === 0) {
+        globalErrors.push(
+          t("errors.unknown_error", "An unexpected error occurred.")
+        );
+      }
+    } else {
+      globalErrors.push(t("errors.network_error", "A network error occurred."));
+    }
+
+    return { globalErrors, fieldErrors };
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setTouched({
-      username: true,
-      email: true,
-      password: true,
-    });
-    register(formData, {
+
+    const result = schema.safeParse(formData);
+
+    if (!result.success) {
+      const fieldErrors: Partial<Record<keyof RegisterData, string>> = {};
+      result.error.errors.forEach((err) => {
+        const path = err.path[0] as keyof RegisterData;
+        if (!fieldErrors[path]) {
+          fieldErrors[path] = err.message;
+        }
+      });
+      setLocalErrors(fieldErrors);
+      return;
+    }
+
+    setLocalErrors({});
+    setGlobalBackendErrors([]);
+    setBackendFieldErrors({});
+
+    registerMutation(formData, {
       onSuccess: () => {
-        navigate({ to: "/login" });
+        setTimeout(() => navigate({ to: "/login" }), 2000);
+      },
+      onError: (err) => {
+        const { globalErrors, fieldErrors } = extractBackendErrors(err);
+        setGlobalBackendErrors(globalErrors);
+        setBackendFieldErrors(fieldErrors);
       },
     });
-  };
-
-  // 🔽 Get backend error for a field
-  const getBackendError = (field: keyof RegisterData): string | undefined => {
-    let backendError: RegisterError | undefined;
-    if (
-      error &&
-      typeof error === "object" &&
-      "response" in error &&
-      error.response &&
-      typeof error.response === "object" &&
-      "data" in error.response
-    ) {
-      backendError = (error.response as { data: RegisterError }).data;
-    }
-    return backendError?.errors?.[field];
-  };
-
-  const showError = (field: keyof RegisterData): boolean => {
-    return Boolean(touched[field] && getBackendError(field));
-  };
-
-  const getErrorMessage = (field: keyof RegisterData): string | undefined => {
-    return getBackendError(field);
   };
 
   return (
@@ -124,7 +181,7 @@ const RegisterFeature: React.FC = () => {
           {t("auth.createAccount")}
         </Typography>
 
-        {/* Success Alert */}
+        {/* ✅ Success Alert */}
         {isSuccess && (
           <Alert
             severity="success"
@@ -134,25 +191,28 @@ const RegisterFeature: React.FC = () => {
           </Alert>
         )}
 
-        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
-          {/* Username Field */}
-          {/* Username Field */}
+        {/* ✅ Global Backend Errors */}
+        {globalBackendErrors.map((err, idx) => (
+          <Alert
+            key={idx}
+            severity="error"
+            sx={{ width: "100%", mb: 2, borderRadius: 1 }}
+          >
+            {err}
+          </Alert>
+        ))}
+
+        <form onSubmit={handleSubmit} style={{ width: "100%" }}>
+          {/* Username */}
           <TextField
             margin="normal"
-            required
             fullWidth
-            id="username"
             label={t("auth.username")}
             name="username"
-            autoComplete="username"
-            autoFocus
             value={formData.username}
             onChange={handleChange}
-            onBlur={() => handleBlur("username")}
-            error={showError("username")}
-            helperText={
-              showError("username") ? getErrorMessage("username") : ""
-            }
+            error={Boolean(localErrors.username || backendFieldErrors.username)}
+            helperText={localErrors.username || backendFieldErrors.username}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -162,20 +222,17 @@ const RegisterFeature: React.FC = () => {
             }}
           />
 
-          {/* Email Field */}
+          {/* Email */}
           <TextField
             margin="normal"
-            required
             fullWidth
-            id="email"
             label={t("auth.email")}
             name="email"
-            autoComplete="email"
+            type="email"
             value={formData.email}
             onChange={handleChange}
-            onBlur={() => handleBlur("email")}
-            error={showError("email")}
-            helperText={showError("email") ? getErrorMessage("email") : ""}
+            error={Boolean(localErrors.email || backendFieldErrors.email)}
+            helperText={localErrors.email || backendFieldErrors.email}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -185,23 +242,17 @@ const RegisterFeature: React.FC = () => {
             }}
           />
 
-          {/* Password Field */}
+          {/* Password */}
           <TextField
             margin="normal"
-            required
             fullWidth
-            name="password"
             label={t("auth.password")}
-            type={showPassword ? "text" : "password"}
-            id="password"
-            autoComplete="new-password"
+            name="password"
+            type="password"
             value={formData.password}
             onChange={handleChange}
-            onBlur={() => handleBlur("password")}
-            error={showError("password")}
-            helperText={
-              showError("password") ? getErrorMessage("password") : ""
-            }
+            error={Boolean(localErrors.password || backendFieldErrors.password)}
+            helperText={localErrors.password || backendFieldErrors.password}
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
@@ -211,46 +262,29 @@ const RegisterFeature: React.FC = () => {
             }}
           />
 
-          {/* Submit Button */}
+          {/* Submit */}
           <Button
             type="submit"
             fullWidth
             variant="contained"
             disabled={isPending}
-            sx={{
-              mt: 3,
-              mb: 2,
-              py: 1.5,
-              fontWeight: 600,
-              textTransform: "none",
-              borderRadius: 1,
-            }}
+            sx={{ mt: 3, mb: 2 }}
           >
-            {isPending ? (
-              <>
-                <CircularProgress size={20} sx={{ mr: 1, ml: 1 }} />
-                {t("auth.creatingAccount")}
-              </>
-            ) : (
-              t("auth.createAccount")
-            )}
+            {isPending ? <CircularProgress size={20} /> : t("auth.signUp")}
           </Button>
 
-          {/* Sign In Link */}
-          <Box sx={{ textAlign: "center" }}>
-            <Typography variant="body2" color="text.secondary">
-              {t("auth.alreadyHaveAccount")}{" "}
-              <Link
-                component="button"
-                variant="body2"
-                onClick={() => navigate({ to: "/login" })}
-                sx={{ fontWeight: 500 }}
-              >
-                {t("auth.signIn")}
-              </Link>
-            </Typography>
-          </Box>
-        </Box>
+          {/* Login link */}
+          <Typography variant="body2" align="center">
+            {t("auth.haveAccount")}{" "}
+            <Link
+              component="button"
+              variant="body2"
+              onClick={() => navigate({ to: "/login" })}
+            >
+              {t("auth.signIn")}
+            </Link>
+          </Typography>
+        </form>
       </Paper>
     </Container>
   );
