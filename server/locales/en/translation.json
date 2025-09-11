@@ -19,5 +19,18 @@
   "errors": {
     "validation_failed": "Some fields are invalid. Please check and try again.",
     "invalid_credentials": "Invalid email or password."
-  }
+  },
+  "server_running": "Server is running",
+  "family_member_not_found": "Family member not found",
+  "family_members_fetched_successfully": "Family members fetched successfully",
+  "server_error_fetching_family_members": "Server error while fetching family members",
+  "family_member_fetched_successfully": "Family member fetched successfully",
+  "server_error_fetching_family_member": "Server error while fetching family member",
+  "family_member_created_successfully": "Family member created successfully",
+  "server_error_creating_family_member": "Server error while creating family member",
+  "family_member_updated_successfully": "Family member updated successfully",
+  "server_error_updating_family_member": "Server error while updating family member",
+  "family_member_deleted_successfully": "Family member deleted successfully",
+  "server_error_deleting_family_member": "Server error while deleting family member",
+  "route_not_found": "Route not found"
 }

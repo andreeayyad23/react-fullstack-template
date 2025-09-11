@@ -4,10 +4,26 @@
   "profile": "Profile",
   "change_language": "Change Language",
   "dashboard": {
+    "title": "Dashboard",
     "welcome": "Welcome to the Dashboard",
+    "comingSoon": "Coming Soon",
     "goodMorning": "Good Morning!",
     "goodAfternoon": "Good Afternoon!",
     "goodEvening": "Good Evening!"
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "email": "Email",
+    "inbox": "Inbox",
+    "starred": "Starred",
+    "sendEmail": "Send Email",
+    "drafts": "Drafts",
+    "settings": "Settings",
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "allMail": "All Mail",
+    "trash": "Trash",
+    "spam": "Spam"
   },
   "auth": {
     "haveAccount": "Already have an account?",
@@ -48,5 +64,51 @@
     "email_exists": "An account with this email already exists",
     "username_taken": "This username is already taken",
     "email_password_required": "Email and password are required"
+  },
+  "family": {
+    "create": {
+      "title": "Add New Family Member",
+      "description": "Fill in the details below to add a new member to your family.",
+      "form": {
+        "username": "Username",
+        "fatherName": "Father Name",
+        "motherName": "Mother Name",
+        "familyName": "Family Name",
+        "dateOfBirth": "Date of Birth",
+        "placeholder": {
+          "username": "Enter username",
+          "fatherName": "Enter father's name",
+          "motherName": "Enter mother's name",
+          "familyName": "Enter family name"
+        }
+      },
+      "backButton": "Back",
+      "createButton": "Create Member",
+      "creatingButton": "Creating...",
+      "requiredFields": "All fields marked with * are required.",
+      "error": {
+        "title": "Error",
+        "message": "An error occurred while creating the family member"
+      },
+      "errors": {
+        "username": {
+          "required": "Username is required",
+          "minLength": "Username must be at least 3 characters"
+        },
+        "fatherName": {
+          "required": "Father name is required"
+        },
+        "motherName": {
+          "required": "Mother name is required"
+        },
+        "familyName": {
+          "required": "Family name is required"
+        },
+        "date": {
+          "required": "Date is required",
+          "invalid": "Invalid date"
+        }
+      }
+    }
   }
 }

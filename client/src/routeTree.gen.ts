@@ -13,6 +13,9 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as _notFoundRouteImport } from './routes/__not-found'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FamilyIndexRouteImport } from './routes/family.index'
+import { Route as FamilyCreateRouteImport } from './routes/family.create'
+import { Route as FamilyFamilyMemberIdEditRouteImport } from './routes/family.$familyMemberId.edit'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -33,16 +36,38 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FamilyIndexRoute = FamilyIndexRouteImport.update({
+  id: '/family/',
+  path: '/family/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FamilyCreateRoute = FamilyCreateRouteImport.update({
+  id: '/family/create',
+  path: '/family/create',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FamilyFamilyMemberIdEditRoute =
+  FamilyFamilyMemberIdEditRouteImport.update({
+    id: '/family/$familyMemberId/edit',
+    path: '/family/$familyMemberId/edit',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/family/create': typeof FamilyCreateRoute
+  '/family': typeof FamilyIndexRoute
+  '/family/$familyMemberId/edit': typeof FamilyFamilyMemberIdEditRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/family/create': typeof FamilyCreateRoute
+  '/family': typeof FamilyIndexRoute
+  '/family/$familyMemberId/edit': typeof FamilyFamilyMemberIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -50,13 +75,36 @@ export interface FileRoutesById {
   '/__not-found': typeof _notFoundRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/family/create': typeof FamilyCreateRoute
+  '/family/': typeof FamilyIndexRoute
+  '/family/$familyMemberId/edit': typeof FamilyFamilyMemberIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/register'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/family/create'
+    | '/family'
+    | '/family/$familyMemberId/edit'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/register'
-  id: '__root__' | '/' | '/__not-found' | '/login' | '/register'
+  to:
+    | '/'
+    | '/login'
+    | '/register'
+    | '/family/create'
+    | '/family'
+    | '/family/$familyMemberId/edit'
+  id:
+    | '__root__'
+    | '/'
+    | '/__not-found'
+    | '/login'
+    | '/register'
+    | '/family/create'
+    | '/family/'
+    | '/family/$familyMemberId/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -64,6 +112,9 @@ export interface RootRouteChildren {
   _notFoundRoute: typeof _notFoundRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  FamilyCreateRoute: typeof FamilyCreateRoute
+  FamilyIndexRoute: typeof FamilyIndexRoute
+  FamilyFamilyMemberIdEditRoute: typeof FamilyFamilyMemberIdEditRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -96,6 +147,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/family/': {
+      id: '/family/'
+      path: '/family'
+      fullPath: '/family'
+      preLoaderRoute: typeof FamilyIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/family/create': {
+      id: '/family/create'
+      path: '/family/create'
+      fullPath: '/family/create'
+      preLoaderRoute: typeof FamilyCreateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/family/$familyMemberId/edit': {
+      id: '/family/$familyMemberId/edit'
+      path: '/family/$familyMemberId/edit'
+      fullPath: '/family/$familyMemberId/edit'
+      preLoaderRoute: typeof FamilyFamilyMemberIdEditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -104,6 +176,9 @@ const rootRouteChildren: RootRouteChildren = {
   _notFoundRoute: _notFoundRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  FamilyCreateRoute: FamilyCreateRoute,
+  FamilyIndexRoute: FamilyIndexRoute,
+  FamilyFamilyMemberIdEditRoute: FamilyFamilyMemberIdEditRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

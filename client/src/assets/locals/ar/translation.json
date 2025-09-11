@@ -4,10 +4,26 @@
   "profile": "الملف الشخصي",
   "change_language": "تغيير اللغة",
   "dashboard": {
+    "title": "لوحة التحكم",
+    "comingSoon": "قريباً",
     "welcome": "مرحبًا بك في لوحة القيادة",
     "goodMorning": "صباح الخير!",
     "goodAfternoon": "مساء الخير!",
     "goodEvening": "مساء الخير!"
+  },
+  "sidebar": {
+    "dashboard": "لوحة التحكم",
+    "email": "البريد الإلكتروني",
+    "inbox": "الوارد",
+    "starred": "مميز بنجمة",
+    "sendEmail": "إرسال بريد",
+    "drafts": "المسودات",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "preferences": "التفضيلات",
+    "allMail": "جميع الرسائل",
+    "trash": "المهملات",
+    "spam": "الرسائل غير المرغوب فيها"
   },
   "auth": {
     "haveAccount": "هل لديك حساب بالفعل؟",
@@ -48,5 +64,52 @@
     "email_exists": "حساب بهذا البريد الإلكتروني موجود بالفعل",
     "username_taken": "اسم المستخدم هذا مأخوذ بالفعل",
     "email_password_required": "البريد الإلكتروني وكلمة المرور مطلوبان"
+  },
+
+  "family": {
+    "create": {
+      "title": "إضافة عضو عائلي جديد",
+      "description": "املأ التفاصيل أدناه لإضافة عضو جديد إلى عائلتك.",
+      "form": {
+        "username": "اسم المستخدم",
+        "fatherName": "اسم الأب",
+        "motherName": "اسم الأم",
+        "familyName": "اسم العائلة",
+        "dateOfBirth": "تاريخ الميلاد",
+        "placeholder": {
+          "username": "أدخل اسم المستخدم",
+          "fatherName": "أدخل اسم الأب",
+          "motherName": "أدخل اسم الأم",
+          "familyName": "أدخل اسم العائلة"
+        }
+      },
+      "backButton": "العودة",
+      "createButton": "إنشاء العضو",
+      "creatingButton": "جاري الإنشاء...",
+      "requiredFields": "جميع الحقول المحددة بـ * إلزامية.",
+      "error": {
+        "title": "خطأ",
+        "message": "حدث خطأ أثناء إنشاء العضو العائلي"
+      },
+      "errors": {
+        "username": {
+          "required": "اسم المستخدم مطلوب",
+          "minLength": "يجب أن يكون اسم المستخدم على الأقل 3 أحرف"
+        },
+        "fatherName": {
+          "required": "اسم الأب مطلوب"
+        },
+        "motherName": {
+          "required": "اسم الأم مطلوب"
+        },
+        "familyName": {
+          "required": "اسم العائلة مطلوب"
+        },
+        "date": {
+          "required": "التاريخ مطلوب",
+          "invalid": "تاريخ غير صالح"
+        }
+      }
+    }
   }
-}
+} 

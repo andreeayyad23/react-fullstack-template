@@ -1,3 +1,4 @@
+// src/i18n.ts
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
@@ -24,5 +25,13 @@ i18n
       caches: ["localStorage", "cookie"],
     },
   });
+
+// ✅ Handle direction (LTR/RTL) globally
+i18n.on("languageChanged", (lng) => {
+  if (typeof document !== "undefined") {
+    document.documentElement.dir = lng === "ar" ? "rtl" : "ltr";
+    document.documentElement.lang = lng;
+  }
+});
 
 export default i18n;
